@@ -1,0 +1,315 @@
+<Window x:Class="RobotVisionSortingTwin.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:RobotVisionSortingTwin"
+        Title="机器人视觉分拣 · 三维数字孪生沙盘" Width="1560" Height="980"
+        MinWidth="1100" MinHeight="780" Background="#0B1320" Foreground="#E3EDF5"
+        FontFamily="Microsoft YaHei UI" FontSize="12" Closing="Window_Closing">
+    <Window.Resources>
+        <SolidColorBrush x:Key="Muted" Color="#8FA4B8" />
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#E3EDF5" />
+        </Style>
+        <Style x:Key="Caption" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#8FA4B8" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="#111F30" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderBrush" Value="#24354A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#1B3046" />
+            <Setter Property="Foreground" Value="#DCEAF5" />
+            <Setter Property="BorderBrush" Value="#344A61" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Surface" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Surface" Property="Background" Value="#2C526A" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#C4D5E3" />
+            <Setter Property="Margin" Value="0,6,0,6" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Foreground" Value="#15273A" />
+            <Setter Property="Margin" Value="0,3,0,7" />
+        </Style>
+        <Style TargetType="Slider">
+            <Setter Property="Margin" Value="0,4,0,10" />
+            <Setter Property="IsMoveToPointEnabled" Value="True" />
+        </Style>
+    </Window.Resources>
+    <Grid Margin="20,16" Background="#0B1320">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="FACTORY LAB  /  DIGITAL TWIN" Foreground="#5ABAC9"
+                           FontSize="11" FontWeight="SemiBold" />
+                <TextBlock Text="机器人视觉分拣沙盘" FontSize="25" FontWeight="SemiBold"
+                           Margin="0,5,0,4" />
+                <TextBlock Text="工业相机识别 → 输送定位 → 机器人抓取 → 分类入仓"
+                           Style="{StaticResource Caption}" Margin="0" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <WrapPanel HorizontalAlignment="Right">
+                    <Button x:Name="PlayButton" Content="▶  开始演示" Click="Play_Click"
+                            Background="#147D88" BorderBrush="#239CAA" />
+                    <Button Content="↺  复位" Click="Reset_Click" />
+                    <Button Content="导出记录" Click="Export_Click" />
+                    <CheckBox x:Name="LiveCheck" Content="跟随平台"
+                              Click="Live_Click" VerticalAlignment="Center" Margin="8,0,0,6" />
+                    <Button Content="联动设置" Click="LinkSettings_Click" Margin="10,0,0,6" />
+                </WrapPanel>
+                <TextBlock x:Name="ModeBadge" Text="● 独立演示 / 纯 C# / 无需硬件"
+                           Foreground="#65CDB7" HorizontalAlignment="Right" FontSize="11" />
+            </StackPanel>
+        </Grid>
+        <UniformGrid Grid.Row="1" Columns="5" Margin="0,0,0,14">
+            <Border Style="{StaticResource Card}" Margin="0,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="上线工件" Style="{StaticResource Caption}" />
+                    <TextBlock x:Name="ReceivedText" Text="0" FontSize="26" FontWeight="SemiBold" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="视觉检测" Style="{StaticResource Caption}" />
+                    <TextBlock x:Name="InspectedText" Text="0" FontSize="26" Foreground="#61BDF0" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="仿真分拣完成" Style="{StaticResource Caption}" />
+                    <TextBlock x:Name="SortedText" Text="0" FontSize="26" Foreground="#60D6B1" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="复检 / 在途" Style="{StaticResource Caption}" />
+                    <TextBlock x:Name="RejectedText" Text="0 / 0" FontSize="26" Foreground="#EAB86A" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="仿真时钟" Style="{StaticResource Caption}" />
+                    <TextBlock x:Name="ClockText" Text="00:00.0" FontSize="26" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="174" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="304" />
+            </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource Card}" Padding="10,14" Margin="0,0,12,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Margin="4,0,0,12">
+                        <TextBlock Text="产线设备" FontSize="14" FontWeight="SemiBold" />
+                        <TextBlock Text="08 ASSETS · LINE 01" FontSize="10" Foreground="#718DA4"
+                                   Margin="0,7,0,0" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Margin="4,12,4,0">
+                        <TextBlock Text="工件与料仓" Style="{StaticResource Caption}" />
+                        <TextBlock Text="●  A · 圆形轴套" Foreground="#59B7F2" Margin="0,4" />
+                        <TextBlock Text="●  B · 矩形壳体" Foreground="#5FD5B6" Margin="0,4" />
+                        <TextBlock Text="●  C · 方形盖板" Foreground="#B79AF0" Margin="0,4" />
+                        <TextBlock Text="●  未知 / 不良 → 复检" Foreground="#E9AC57" Margin="0,4" />
+                    </StackPanel>
+                    <ListBox x:Name="DeviceList" Background="Transparent" BorderThickness="0"
+                             Foreground="#D2E1EC" SelectionChanged="Device_Changed"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="8,10" />
+                                <Setter Property="Margin" Value="0,2" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBoxItem Tag="FEED-01" Content="上料台  ·  FEED-01" />
+                        <ListBoxItem Tag="CAM-01" Content="工业相机  ·  CAM-01" />
+                        <ListBoxItem Tag="BELT-01" Content="输送线  ·  BELT-01" />
+                        <ListBoxItem Tag="ROBOT-01" Content="工业机器人  ·  R-01" IsSelected="True" />
+                        <ListBoxItem Tag="BIN-A" Content="A 类料仓" />
+                        <ListBoxItem Tag="BIN-B" Content="B 类料仓" />
+                        <ListBoxItem Tag="BIN-C" Content="C 类料仓" />
+                        <ListBoxItem Tag="REJECT-01" Content="复检工位" />
+                    </ListBox>
+                </DockPanel>
+            </Border>
+            <Grid Grid.Column="1" Margin="0,0,12,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="152" />
+                </Grid.RowDefinitions>
+                <Border BorderBrush="#24354A" BorderThickness="1" CornerRadius="8"
+                        Background="#0E1827" ClipToBounds="True">
+                    <Grid>
+                        <local:TwinScene x:Name="Scene" />
+                        <StackPanel VerticalAlignment="Top" Margin="16" IsHitTestVisible="False">
+                            <TextBlock Text="CELL 01  /  ROBOT VISION SORTING"
+                                       FontSize="11" Foreground="#B7CFDF" />
+                            <TextBlock x:Name="SceneStatus" Text="产线待命 · 点击开始演示"
+                                       Foreground="#70D2BC" Margin="0,7,0,0" />
+                        </StackPanel>
+                        <WrapPanel VerticalAlignment="Bottom" Margin="14">
+                            <Button Content="全景" Tag="all" Click="View_Click" />
+                            <Button Content="俯视" Tag="top" Click="View_Click" />
+                            <Button Content="聚焦设备" Tag="focus" Click="View_Click" />
+                        </WrapPanel>
+                        <TextBlock Text="拖动旋转 · 滚轮缩放 · 点击选中设备" FontSize="10"
+                                   Foreground="#8FA4B8" HorizontalAlignment="Right"
+                                   VerticalAlignment="Bottom" Margin="14,0,14,4"
+                                   IsHitTestVisible="False" />
+                    </Grid>
+                </Border>
+                <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="14,10">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="产线事件 / PROCESS EVENTS"
+                                   Style="{StaticResource Caption}" />
+                        <TextBlock x:Name="EventText" FontFamily="Consolas, Microsoft YaHei UI"
+                                   FontSize="11" TextWrapping="Wrap" Foreground="#A4BBCD" />
+                    </DockPanel>
+                </Border>
+            </Grid>
+            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">
+                <ScrollViewer x:Name="InspectorScroll" VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="14">
+                        <TextBlock Text="工业视觉 / MACHINE VISION" Style="{StaticResource Caption}" />
+                        <Border Background="#08111C" BorderBrush="#2E4358" BorderThickness="1"
+                                Height="150" CornerRadius="5" ClipToBounds="True">
+                            <Grid>
+                                <Image x:Name="CameraImage" Stretch="Uniform" />
+                                <TextBlock x:Name="CameraHint" Text="等待相机触发" Foreground="#6E8CA3"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <TextBlock Text="CAM-01  ●" Foreground="#5DE5C5" FontFamily="Consolas"
+                                           Margin="9" FontSize="10" />
+                            </Grid>
+                        </Border>
+                        <TextBlock x:Name="VisionResult" Text="尚未检测到工件" Margin="0,9,0,4"
+                                   FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock x:Name="VisionFeatures" Text="面积 — px²  /  周长 — px"
+                                   Foreground="#8FA4B8" FontSize="11" TextWrapping="Wrap" />
+                        <Separator Margin="0,12" Background="#2A3C50" />
+                        <TextBlock x:Name="DeviceTitle" Text="工业机器人 · ROBOT-01" FontWeight="SemiBold" />
+                        <TextBlock x:Name="DeviceDetail" Foreground="#9DB3C5" FontSize="11"
+                                   TextWrapping="Wrap" Margin="0,7,0,10" />
+                        <TextBlock x:Name="BinText" Text="料仓 A  0/12     B  0/12     C  0/12"
+                                   Foreground="#67CBB9" FontSize="11" TextWrapping="Wrap" />
+                        <Button Content="清空三个料仓" Click="Unload_Click" Margin="0,9,0,0" />
+                        <Separator Margin="0,12" Background="#2A3C50" />
+                        <TextBlock Text="仿真参数 / PROCESS CONTROL" Style="{StaticResource Caption}" />
+                        <CheckBox x:Name="InterventionCheck" Content="启用参数干预"
+                                  Checked="Intervention_Changed" Unchecked="Intervention_Changed" />
+                        <StackPanel x:Name="ParameterPanel" IsEnabled="False">
+                            <TextBlock x:Name="SpeedLabel" Text="输送速度   1.40 m/s" FontSize="11" />
+                            <Slider x:Name="BeltSlider" Minimum="0.4" Maximum="2.2" Value="1.4"
+                                    Tag="BeltSpeed" ValueChanged="Parameter_Changed" />
+                            <TextBlock x:Name="FeedLabel" Text="上料间隔   2.80 s" FontSize="11" />
+                            <Slider x:Name="FeedSlider" Minimum="1.5" Maximum="5" Value="2.8"
+                                    Tag="FeedInterval" ValueChanged="Parameter_Changed" />
+                            <TextBlock x:Name="CycleLabel" Text="机器人节拍   2.20 s" FontSize="11" />
+                            <Slider x:Name="CycleSlider" Minimum="1.2" Maximum="5" Value="2.2"
+                                    Tag="RobotCycle" ValueChanged="Parameter_Changed" />
+                            <TextBlock x:Name="CapacityLabel" Text="单仓容量   12 件" FontSize="11" />
+                            <Slider x:Name="CapacitySlider" Minimum="3" Maximum="30" Value="12"
+                                    TickFrequency="1" IsSnapToTickEnabled="True"
+                                    Tag="BinCapacity" ValueChanged="Parameter_Changed" />
+                            <CheckBox x:Name="LightingCheck" Content="演示相机欠曝光"
+                                      Click="Lighting_Click" />
+                        </StackPanel>
+                        <Button x:Name="EmergencyButton" Content="■  仿真急停" Click="Emergency_Click"
+                                Background="#632F3B" BorderBrush="#9D4D5B" Margin="0,10,0,0" />
+                        <Separator Margin="0,14" Background="#2A3C50" />
+                        <TextBlock Text="双程序联动 / PLATFORM LINK" Style="{StaticResource Caption}" />
+                        <TextBlock x:Name="ConnectionText" Text="等待平台连接" Foreground="#D6B26F"
+                                   TextWrapping="Wrap" FontSize="11" Margin="0,3,0,8" />
+                        <TextBlock Text="从平台收到产品库后，指定产品与料仓的对应关系。未映射产品进入复检。"
+                                   Foreground="#8FA4B8" TextWrapping="Wrap" FontSize="11" />
+                        <TextBlock Text="A 仓产品" FontSize="11" Margin="0,9,0,0" />
+                        <ComboBox x:Name="RouteA" DisplayMemberPath="Name" SelectedValuePath="Id"
+                                  SelectionChanged="Route_Changed" />
+                        <TextBlock Text="B 仓产品" FontSize="11" />
+                        <ComboBox x:Name="RouteB" DisplayMemberPath="Name" SelectedValuePath="Id"
+                                  SelectionChanged="Route_Changed" />
+                        <TextBlock Text="C 仓产品" FontSize="11" />
+                        <ComboBox x:Name="RouteC" DisplayMemberPath="Name" SelectedValuePath="Id"
+                                  SelectionChanged="Route_Changed" />
+                        <TextBlock x:Name="LinkDetails" Text="仅接收识别结果；动作由沙盘仿真生成。"
+                                   TextWrapping="Wrap" FontSize="10" Foreground="#8299AE" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+        <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,14,0,0" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="170" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="班次回放" FontWeight="SemiBold" />
+                    <TextBlock Text="120 s / 固定步长" FontSize="10" Foreground="#8FA4B8" Margin="0,5,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,18,0">
+                    <Slider x:Name="Timeline" Minimum="0" Maximum="120" Value="0"
+                            PreviewMouseLeftButtonDown="Timeline_Down"
+                            PreviewMouseLeftButtonUp="Timeline_Up"
+                            ValueChanged="Timeline_Changed" Margin="0,0,0,3" />
+                    <Grid>
+                        <TextBlock Text="00:00  上料" FontSize="10" Foreground="#7894AB" />
+                        <TextBlock Text="视觉检测 → 抓取分拣 → 班末清线" FontSize="10"
+                                   Foreground="#7894AB" HorizontalAlignment="Center" />
+                        <TextBlock Text="02:00" FontSize="10" Foreground="#7894AB"
+                                   HorizontalAlignment="Right" />
+                    </Grid>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="倍速" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <ComboBox x:Name="PlaybackSpeed" Width="70" SelectedIndex="0"
+                              SelectionChanged="PlaybackSpeed_Changed" Margin="0">
+                        <ComboBoxItem Content="1 ×" Tag="1" />
+                        <ComboBoxItem Content="2 ×" Tag="2" />
+                        <ComboBoxItem Content="4 ×" Tag="4" />
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
